@@ -63,6 +63,18 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         String email = emailEditText.getText().toString().trim();
         String pass = passwordEditText.getText().toString().trim();
 
+        if (emailEditText.getText().toString().trim().isEmpty()){
+            emailEditText.setError("Email Required");
+            emailEditText.requestFocus();
+            return;
+        }
+
+        if (passwordEditText.getText().toString().trim().isEmpty()){
+            passwordEditText.setError("Password Required");
+            passwordEditText.requestFocus();
+            return;
+        }
+
         progressBar.setVisibility(View.VISIBLE);
         firebaseAuth.signInWithEmailAndPassword(email,pass).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
             @Override
