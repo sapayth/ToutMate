@@ -2,7 +2,6 @@ package com.nullpointers.toutmate.fragment;
 
 
 import android.app.DatePickerDialog;
-import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -11,14 +10,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.nullpointers.toutmate.Model.DateConverter;
 import com.nullpointers.toutmate.Model.Event;
-import com.nullpointers.toutmate.Model.Expense;
-import com.nullpointers.toutmate.Model.Moment;
 import com.nullpointers.toutmate.Model.TourMateDatabase;
 import com.nullpointers.toutmate.R;
 
@@ -27,7 +27,7 @@ import java.util.Calendar;
 /**
  * A simple {@link Fragment} subclass.
  */
-public class AddEventFragment extends Fragment implements View.OnClickListener {
+public class AddEventFragment extends Fragment implements View.OnClickListener, DatePickerDialog.OnDateSetListener {
 
     private EditText eventNameEditText;
     private EditText startLocationEditText;
@@ -39,6 +39,16 @@ public class AddEventFragment extends Fragment implements View.OnClickListener {
 
     private long createdDate;
     private long departureDate;
+
+    private DateConverter dateConverter;
+
+    private TourMateDatabase database;
+    private FirebaseUser user;
+
+    Calendar calendar = Calendar.getInstance();
+    int year = calendar.get(Calendar.YEAR);
+    int month = calendar.get(Calendar.MONTH);
+    int day = calendar.get(Calendar.DAY_OF_MONTH);
 
     public AddEventFragment() {
         // Required empty public constructor
@@ -66,6 +76,11 @@ public class AddEventFragment extends Fragment implements View.OnClickListener {
         startDateTextView.setOnClickListener(this);
         createEventButton.setOnClickListener(this);
 
+        dateConverter = new DateConverter();
+
+        user = FirebaseAuth.getInstance().getCurrentUser();
+        database = new TourMateDatabase(getContext(),user);
+
     }
 
     @Override
@@ -82,22 +97,24 @@ public class AddEventFragment extends Fragment implements View.OnClickListener {
     }
 
     private void createEvent() {
-        TourMateDatabase database = new TourMateDatabase(getContext(), FirebaseAuth.getInstance().getCurrentUser());
         String eventName = eventNameEditText.getText().toString().trim();
         String startLocation = startLocationEditText.getText().toString().trim();
         String destLocation = destLocationEditText.getText().toString().trim();
         double budget = Double.parseDouble(budgetEditText.getText().toString());
         String eventKey = database.getNewEventKey();
-        Event event = new Event(eventKey,eventName,startLocation,destLocation,8764287,237648726,budget);
+        Event event = new Event(eventKey,eventName,startLocation,destLocation,createdDate,departureDate,budget);
         database.addEvent(event);
     }
 
     private void chooseStartDate() {
-        Calendar calendar = Calendar.getInstance();
-        int year = calendar.get(Calendar.YEAR);
-        int month = calendar.get(Calendar.MONTH);
-        int day = calendar.get(Calendar.DAY_OF_MONTH);
+        createdDate = dateConverter.getDateInUnix(day+"/"+(month+1)+"/"+year);
+        DatePickerDialog datePickerDialog = new DatePickerDialog(getContext(), this,year,month,day);
+        datePickerDialog.show();
 
+    }
 
+    @Override
+    public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
+        departureDate = dateConverter.getDateInUnix(dayOfMonth+"/"+(month+1)+"/"+year);
     }
 }

@@ -1,9 +1,16 @@
 package com.nullpointers.toutmate.Model;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class Event {
+
     private String key;
     private String eventName;
     private String startingLocation;
@@ -76,8 +83,5 @@ public class Event {
         return momentList;
     }
 
-    public String getDateInString(long unixDate){
 
-        return  null;
-    }
 }
