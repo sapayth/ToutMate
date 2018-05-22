@@ -1,29 +1,34 @@
 package com.nullpointers.toutmate.Model;
 
 public class Expense {
+    private String key;
     private String expenseName;
-    private String expenseAmount;
+    private double expenseAmount;
     private String comment;
     private long date;
-    private long time;
 
-    public Expense(String expenseName, String expenseAmount, String comment, long date, long time) {
+    public Expense(String key, String expenseName, double expenseAmount, String comment, long date) {
+        this.key = key;
         this.expenseName = expenseName;
         this.expenseAmount = expenseAmount;
         this.comment = comment;
         this.date = date;
-        this.time = time;
     }
+
 
     public Expense() {
         //required for Firebase database
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public String getExpenseName() {
         return expenseName;
     }
 
-    public String getExpenseAmount() {
+    public double getExpenseAmount() {
         return expenseAmount;
     }
 
@@ -35,7 +40,4 @@ public class Expense {
         return date;
     }
 
-    public long getTime() {
-        return time;
-    }
 }

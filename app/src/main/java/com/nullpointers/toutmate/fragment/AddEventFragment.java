@@ -2,6 +2,7 @@ package com.nullpointers.toutmate.fragment;
 
 
 import android.app.DatePickerDialog;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -14,7 +15,14 @@ import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.nullpointers.toutmate.Model.Event;
+import com.nullpointers.toutmate.Model.Expense;
+import com.nullpointers.toutmate.Model.Moment;
+import com.nullpointers.toutmate.Model.TourMateDatabase;
 import com.nullpointers.toutmate.R;
+
+import java.util.Calendar;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -28,6 +36,9 @@ public class AddEventFragment extends Fragment implements View.OnClickListener {
     private TextView startDateTextView;
     private ImageButton startDateButton;
     private Button createEventButton;
+
+    private long createdDate;
+    private long departureDate;
 
     public AddEventFragment() {
         // Required empty public constructor
@@ -71,10 +82,22 @@ public class AddEventFragment extends Fragment implements View.OnClickListener {
     }
 
     private void createEvent() {
-
+        TourMateDatabase database = new TourMateDatabase(getContext(), FirebaseAuth.getInstance().getCurrentUser());
+        String eventName = eventNameEditText.getText().toString().trim();
+        String startLocation = startLocationEditText.getText().toString().trim();
+        String destLocation = destLocationEditText.getText().toString().trim();
+        double budget = Double.parseDouble(budgetEditText.getText().toString());
+        String eventKey = database.getNewEventKey();
+        Event event = new Event(eventKey,eventName,startLocation,destLocation,8764287,237648726,budget);
+        database.addEvent(event);
     }
 
     private void chooseStartDate() {
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
 
     }
 }

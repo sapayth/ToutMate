@@ -121,7 +121,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
                     firebaseUser = firebaseAuth.getCurrentUser();
                     User user = new User(name,phone,email);
                     userRef = rootRef.child(firebaseAuth.getCurrentUser().getUid());
-                    userInfoRef = userRef.child("User");
+                    userInfoRef = userRef.child("UserInfo");
                     userInfoRef.setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
                         @Override
                         public void onComplete(@NonNull Task<Void> task) {

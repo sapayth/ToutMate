@@ -13,7 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
+import com.google.firebase.auth.FirebaseAuth;
 import com.nullpointers.toutmate.Model.Event;
+import com.nullpointers.toutmate.Model.TourMateDatabase;
 import com.nullpointers.toutmate.R;
 
 import java.util.ArrayList;
@@ -49,6 +51,10 @@ public class EventListFragment extends Fragment {
         eventListRecyclerView = view.findViewById(R.id.eventListRecyclerView);
         addButton = view.findViewById(R.id.addEventButton);
         emptyEventTextView = view.findViewById(R.id.showEmptyEvent);
+
+        TourMateDatabase database = new TourMateDatabase(getContext(), FirebaseAuth.getInstance().getCurrentUser());
+
+        eventHeadingTextView.setText(database.getNewEventKey());
 
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override

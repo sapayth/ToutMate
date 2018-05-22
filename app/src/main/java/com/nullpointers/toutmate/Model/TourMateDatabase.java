@@ -19,24 +19,49 @@ public class TourMateDatabase {
     private FirebaseAuth firebaseAuth;
     private DatabaseReference rootRef;
     private DatabaseReference userRef;
-    private DatabaseReference userInfoRef;
     private DatabaseReference eventRef;
     private DatabaseReference expenseRef;
     private DatabaseReference momentRef;
-    FirebaseUser user;
+    private FirebaseUser user;
 
-    public TourMateDatabase(Context context ){
+    private String eventKey;
+    private String expenseKey;
+    private String momentKey;
+
+    public TourMateDatabase(Context context, FirebaseUser user){
 
         this.context = context;
+        this.user = user;
         firebaseAuth = FirebaseAuth.getInstance();
-        rootRef = FirebaseDatabase.getInstance().getReference();
-        /*user = firebaseAuth.getCurrentUser();
+        rootRef = FirebaseDatabase.getInstance().getReference("Tour Mate");
         userRef = rootRef.child(user.getUid());
-        userInfoRef = userRef.child("User");
         eventRef = userRef.child("Event");
-        expenseRef = eventRef.child("Expense");
-        momentRef=eventRef.child("Moment");*/
-
+        eventKey = eventRef.push().getKey();
     }
 
+    public void addEvent(Event event){
+        eventRef.child(eventKey).setValue(event);
+    }
+
+    public void addExpense(String eventKey, String expenseKey, Expense expense){
+        expenseRef = eventRef.child(eventKey).child("Expense");
+        expenseRef.child(expenseKey).setValue(expense);
+    }
+
+    public void addMoment(String eventKey, String momentKey, Moment moment){
+        momentRef = eventRef.child(eventKey).child("Moment");
+        momentRef.child(momentKey).setValue(moment);
+    }
+
+    public String getNewEventKey(){
+        return eventKey;
+    }
+
+    public String getNewExpenseKey(String eventKey){
+        return  eventRef.child(eventKey).child("Expense").push().getKey();
+    }
+
+    public String getNewMomentKey(String eventKey){
+        return  eventRef.child(eventKey).child("Moment").push().getKey();
+    }
 }

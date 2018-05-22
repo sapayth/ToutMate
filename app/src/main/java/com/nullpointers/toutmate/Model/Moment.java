@@ -3,23 +3,26 @@ package com.nullpointers.toutmate.Model;
 import android.net.Uri;
 
 public class Moment {
-
+    private String key;
     private String fileName;
     private String formatName;
     private long date;
-    private long time;
-    private Uri downloadLink;
+    private String downloadLink;
 
     public Moment() {
         //required for firebase
     }
 
-    public Moment(String fileName, String formatName, long date, long time, Uri downloadLink) {
+    public Moment(String key, String fileName, String formatName, long date, String downloadLink) {
+        this.key = key;
         this.fileName = fileName;
         this.formatName = formatName;
         this.date = date;
-        this.time = time;
         this.downloadLink = downloadLink;
+    }
+
+    public String getKey() {
+        return key;
     }
 
     public String getFileName() {
@@ -34,11 +37,7 @@ public class Moment {
         return date;
     }
 
-    public long getTime() {
-        return time;
-    }
-
-    public Uri getDownloadLink() {
+    public String getDownloadLink() {
         return downloadLink;
     }
 }

@@ -1,24 +1,43 @@
 package com.nullpointers.toutmate.Model;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Event {
+    private String key;
     private String eventName;
     private String startingLocation;
     private String destinationLocation;
     private long createdDate;
     private long departureDate;
-    private String budget;
+    private double budget;
+    private List<Expense> expenseList = new ArrayList<>();
+    private List<Moment> momentList = new ArrayList<>();
 
     public Event() {
         //required for firebase
     }
 
-    public Event(String eventName, String startingLocation, String destinationLocation,long createdDate, long departureDate, String budget) {
+    public Event(String key, String eventName, String startingLocation, String destinationLocation,long createdDate, long departureDate, double budget) {
+        this.key = key;
         this.eventName = eventName;
         this.startingLocation = startingLocation;
         this.destinationLocation = destinationLocation;
         this.createdDate = createdDate;
         this.departureDate = departureDate;
         this.budget = budget;
+    }
+
+    public Event(String key, String eventName, String startingLocation, String destinationLocation, long createdDate, long departureDate, double budget, List<Expense> expenseList, List<Moment> momentList) {
+        this.key = key;
+        this.eventName = eventName;
+        this.startingLocation = startingLocation;
+        this.destinationLocation = destinationLocation;
+        this.createdDate = createdDate;
+        this.departureDate = departureDate;
+        this.budget = budget;
+        this.expenseList = expenseList;
+        this.momentList = momentList;
     }
 
     public String getEventName() {
@@ -41,7 +60,24 @@ public class Event {
         return departureDate;
     }
 
-    public String getBudget() {
+    public double getBudget() {
         return budget;
+    }
+
+    public String getKey() {
+        return key;
+    }
+
+    public List<Expense> getExpenseList() {
+        return expenseList;
+    }
+
+    public List<Moment> getMomentList() {
+        return momentList;
+    }
+
+    public String getDateInString(long unixDate){
+
+        return  null;
     }
 }
