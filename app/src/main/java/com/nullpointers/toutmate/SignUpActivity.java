@@ -52,7 +52,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         progressBar = findViewById(R.id.progressbar);
 
         firebaseAuth = FirebaseAuth.getInstance();
-        rootRef = FirebaseDatabase.getInstance().getReference("Tour Mate");
+        rootRef = FirebaseDatabase.getInstance().getReference();//.child("TourMate");
 
         registerButton.setOnClickListener(this);
 

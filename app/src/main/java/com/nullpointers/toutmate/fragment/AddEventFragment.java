@@ -6,6 +6,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,6 +15,7 @@ import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -104,6 +106,10 @@ public class AddEventFragment extends Fragment implements View.OnClickListener, 
         String eventKey = database.getNewEventKey();
         Event event = new Event(eventKey,eventName,startLocation,destLocation,createdDate,departureDate,budget);
         database.addEvent(event);
+        Toast.makeText(getContext(), "Event Created", Toast.LENGTH_SHORT).show();
+        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.mainLayout,new EventListFragment());
+        ft.commit();
     }
 
     private void chooseStartDate() {
@@ -116,5 +122,6 @@ public class AddEventFragment extends Fragment implements View.OnClickListener, 
     @Override
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
         departureDate = dateConverter.getDateInUnix(dayOfMonth+"/"+(month+1)+"/"+year);
+        startDateTextView.setText(dayOfMonth+"/"+(month+1)+"/"+year);
     }
 }
