@@ -1,5 +1,6 @@
 package com.nullpointers.toutmate.Model;
 
+import java.io.Serializable;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -9,7 +10,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
-public class Event {
+public class Event implements Serializable {
 
     private String key;
     private String eventName;

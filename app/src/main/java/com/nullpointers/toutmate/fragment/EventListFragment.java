@@ -13,9 +13,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.nullpointers.toutmate.Model.Event;
 import com.nullpointers.toutmate.Model.TourMateDatabase;
 import com.nullpointers.toutmate.R;
@@ -43,6 +49,10 @@ public class EventListFragment extends Fragment {
 
     private EventListAdapter adapter;
 
+    private DatabaseReference rootRef;
+    private DatabaseReference userRef;
+    private DatabaseReference eventRef;
+
     public EventListFragment() {
         // Required empty public constructor
     }
@@ -63,6 +73,12 @@ public class EventListFragment extends Fragment {
         emptyEventTextView = view.findViewById(R.id.showEmptyEvent);
 
         firebaseAuth = FirebaseAuth.getInstance();
+        user = firebaseAuth.getCurrentUser();
+
+        rootRef = FirebaseDatabase.getInstance().getReference().child("Tour Mate");
+        userRef = rootRef.child(user.getUid());
+        eventRef = userRef.child("Event");
+        //eventKey = eventRef.push().getKey();
 
         database = new TourMateDatabase(getContext(),firebaseAuth.getCurrentUser());
         layoutManager = new LinearLayoutManager(getContext());
@@ -70,10 +86,32 @@ public class EventListFragment extends Fragment {
         eventListRecyclerView.setHasFixedSize(true);
         eventListRecyclerView.setLayoutManager(layoutManager);
 
-        eventList = database.getAllEvent();
+        eventRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot postDataSnapshot: dataSnapshot.getChildren()){
+                    Event event = postDataSnapshot.getValue(Event.class);
+                    eventList.add(event);
+                }
 
-        adapter = new EventListAdapter(getContext(),eventList);
-        eventListRecyclerView.setAdapter(adapter);
+                if (eventList.size()>0){
+                    eventHeadingTextView.setText("Created Events");
+                    emptyEventTextView.setVisibility(View.GONE);
+                    adapter = new EventListAdapter(getContext(),eventList);
+                    eventListRecyclerView.setAdapter(adapter);
+                }else {
+                    emptyEventTextView.setVisibility(View.VISIBLE);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+
 
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override

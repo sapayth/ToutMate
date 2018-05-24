@@ -52,7 +52,7 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
         progressBar = findViewById(R.id.progressbar);
 
         firebaseAuth = FirebaseAuth.getInstance();
-        rootRef = FirebaseDatabase.getInstance().getReference();//.child("TourMate");
+        rootRef = FirebaseDatabase.getInstance().getReference().child("Tour Mate");
 
         registerButton.setOnClickListener(this);
 
@@ -100,17 +100,6 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
             return;
         }
 
-        if (phone.isEmpty()) {
-            phoneEditText.setError(getString(R.string.input_error_phone));
-            phoneEditText.requestFocus();
-            return;
-        }
-
-        if (phone.length() != 11) {
-            phoneEditText.setError(getString(R.string.input_error_phone_invalid));
-            phoneEditText.requestFocus();
-            return;
-        }
 
         progressBar.setVisibility(View.VISIBLE);
 
