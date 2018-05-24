@@ -4,6 +4,7 @@ package com.nullpointers.toutmate.fragment;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,11 +13,13 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
@@ -25,8 +28,26 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.Polyline;
+import com.google.android.gms.maps.model.PolylineOptions;
+import com.nullpointers.toutmate.Direction.DirectionResponse;
+import com.nullpointers.toutmate.Direction.DirectionService;
+import com.nullpointers.toutmate.Direction.Step;
 import com.nullpointers.toutmate.MainActivity;
+import com.nullpointers.toutmate.Nearby.Location;
+import com.nullpointers.toutmate.Nearby.NearbyPlaceService;
+import com.nullpointers.toutmate.Nearby.NearbyPlacesResponse;
+import com.nullpointers.toutmate.Nearby.Result;
 import com.nullpointers.toutmate.R;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+import retrofit2.converter.gson.GsonConverterFactory;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -132,8 +153,102 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
             LatLng latLng = new LatLng(MainActivity.latitude, MainActivity.longitude);
             map.addMarker(new MarkerOptions().position(latLng));
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+//            Log.d("Lat: ", MainActivity.latitude + "");
+//            Log.d("Lon: ", MainActivity.longitude + "");
+
+            // getDirections();
+
+            getNearbyPlaces();
         }
     }
+
+    private void getNearbyPlaces() {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://maps.googleapis.com/maps/api/place/nearbysearch/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        NearbyPlaceService service = retrofit.create(NearbyPlaceService.class);
+        String apiKey = getString(R.string.place_api_key);
+        String url = String.format("json?location=%f,%f&radius=1500&type=restaurant&key=%s",
+                MainActivity.latitude,
+                MainActivity.longitude,
+                apiKey);
+        Call<NearbyPlacesResponse> call = service.getNearbyPlaces(url);
+
+        call.enqueue(new Callback<NearbyPlacesResponse>() {
+            @Override
+            public void onResponse(Call<NearbyPlacesResponse> call, Response<NearbyPlacesResponse> response) {
+                if (response.code() == 200) {
+                    NearbyPlacesResponse nearbyPlacesResponse = response.body();
+                    List<Result> resultList = nearbyPlacesResponse.getResults();
+
+                    for (int i = 0; i < resultList.size(); i++) {
+                        Location location = resultList.get(i).getGeometry().getLocation();
+                        LatLng latLng = new LatLng(location.getLat(), location.getLng());
+                        map.addMarker(new MarkerOptions().position(latLng));
+                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<NearbyPlacesResponse> call, Throwable t) {
+                Toast.makeText(getContext(), "Failed to load nearby places", Toast.LENGTH_SHORT).show();
+                Log.e("Nearby Place Error: ", t.getMessage());
+            }
+        });
+
+    }
+
+    private void getDirections(LatLng startPoint, LatLng endPoint) {
+        Retrofit retrofit = new Retrofit.Builder()
+                .baseUrl("https://maps.googleapis.com/maps/api/")
+                .addConverterFactory(GsonConverterFactory.create())
+                .build();
+        DirectionService service = retrofit.create(DirectionService.class);
+        String key = getString(R.string.direction_api_key);
+        String url = String.format("directions/json?origin=%f,%f&destination=%d,%d&key=%s",
+                startPoint.latitude,
+                startPoint.longitude,
+                endPoint.latitude,
+                endPoint.longitude,
+                key);
+        Call<DirectionResponse> call = service.getDirections(url);
+
+        call.enqueue(new Callback<DirectionResponse>() {
+            @Override
+            public void onResponse(Call<DirectionResponse> call, Response<DirectionResponse> response) {
+                if (response.code() == 200) {
+                    DirectionResponse directionResponse = response.body();
+
+                    List<Step> steps = directionResponse.getRoutes().get(0).getLegs().get(0)
+                            .getSteps();
+
+                    for (int i = 0; i < steps.size(); i++) {
+                        double startLatitude = steps.get(i).getStartLocation().getLat();
+                        double startLongitude = steps.get(i).getStartLocation().getLng();
+                        LatLng startPoint = new LatLng(startLatitude, startLongitude);
+
+                        double endLatitude = steps.get(i).getEndLocation().getLat();
+                        double endLongitude = steps.get(i).getEndLocation().getLng();
+                        LatLng endPoint = new LatLng(endLatitude, endLongitude);
+
+                        Polyline polyline = map.addPolyline(new PolylineOptions()
+                                .add(startPoint)
+                                .add(endPoint)
+                                .color(Color.BLUE));
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<DirectionResponse> call, Throwable t) {
+
+            }
+        });
+    }
+
+
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {

@@ -9,10 +9,12 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -63,16 +65,16 @@ public class EventListFragment extends Fragment {
         emptyEventTextView = view.findViewById(R.id.showEmptyEvent);
 
         firebaseAuth = FirebaseAuth.getInstance();
+        user = firebaseAuth.getCurrentUser();
 
-        database = new TourMateDatabase(getContext(),firebaseAuth.getCurrentUser());
+        database = new TourMateDatabase(getContext(),user);
         layoutManager = new LinearLayoutManager(getContext());
 
         eventListRecyclerView.setHasFixedSize(true);
         eventListRecyclerView.setLayoutManager(layoutManager);
 
         eventList = database.getAllEvent();
-
-        adapter = new EventListAdapter(getContext(),eventList);
+        adapter = new EventListAdapter(getContext(), eventList);
         eventListRecyclerView.setAdapter(adapter);
 
         addButton.setOnClickListener(new View.OnClickListener() {

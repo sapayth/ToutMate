@@ -2,6 +2,7 @@ package com.nullpointers.toutmate.Model;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
+import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -40,13 +41,19 @@ public class TourMateDatabase {
         this.user = user;
         firebaseAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance().getReference();//.child("TourMate");
-        userRef = rootRef.child(user.getUid());
-        eventRef = userRef.child("Event");
-        eventKey = eventRef.push().getKey();
+
+        if (user != null) {
+            userRef = rootRef.child(user.getUid());
+            eventRef = userRef.child("Event");
+            eventKey = eventRef.push().getKey();
+            Toast.makeText(context, "User found", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(context, "not found!!!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     public void addEvent(Event event){
-        eventRef.child(eventKey).setValue(event);
+        eventRef.child(eventKey).push().setValue(event);
     }
 
     public void addExpense(String eventKey, String expenseKey, Expense expense){
@@ -79,6 +86,7 @@ public class TourMateDatabase {
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                     Event event = data.getValue(Event.class);
                     eventList.add(event);
+                    Log.d("Event: " , event.getEventName());
                 }
             }
 
