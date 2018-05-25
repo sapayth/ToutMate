@@ -17,6 +17,7 @@ import com.nullpointers.toutmate.R;
 import com.nullpointers.toutmate.adapter.ExpandableListViewAdapter;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
@@ -25,8 +26,8 @@ import java.util.List;
  */
 public class EventDetailsFragment extends Fragment {
     private ExpandableListView eventExListView;
-    private List<String> events;
-    private HashMap<String, List<String>> expense;
+    private List<String> eventActionHeading = new ArrayList<>();
+    private HashMap<String, List<String>> eventActionChild = new HashMap<>();
     private Event event;
     private TextView eventNameTextView;
     private TextView budgetStatusTextView;
@@ -57,7 +58,7 @@ public class EventDetailsFragment extends Fragment {
         budgetStatusProgressBar = view.findViewById(R.id.budgetStatusProgressBar);
 
         initializeData();
-        ExpandableListViewAdapter expandableListViewAdapter = new ExpandableListViewAdapter(EventDetailsFragment.this.getActivity(), events, expense);
+        ExpandableListViewAdapter expandableListViewAdapter = new ExpandableListViewAdapter(EventDetailsFragment.this.getActivity(), eventActionHeading, eventActionChild);
         eventExListView.setAdapter(expandableListViewAdapter);
 
         Bundle bundle = getArguments();
@@ -81,52 +82,75 @@ public class EventDetailsFragment extends Fragment {
            @Override
            public boolean onChildClick(ExpandableListView parent, View v, int groupPosition, int childPosition, long id) {
 
+               String childClick = eventActionChild.get(eventActionHeading.get(groupPosition)).get(childPosition);
 
-               if (groupPosition == 0 && childPosition==0)
-               {
-                   View mView= getLayoutInflater().inflate(R.layout.add_new_expense,null);
-                   AlertDialog.Builder mBuilder= new AlertDialog.Builder(getContext());
-                           //AlertDialog.Builder(getActivity()).setTitle("expenses").setView(mView).create();
-
-                   mBuilder.setView(mView);
-                   AlertDialog dialog =mBuilder.create();
-                   dialog.show();
-                   Toast.makeText(getContext(), "Dailog add new expanse", Toast.LENGTH_SHORT).show();
-
-
+               if (childClick.equals("Add New Expense")){
+                   newExpenseDialog();
+               }else if (childClick.equals("View All Expense")){
+                   viewAllExpenseDialog();
+               }else if (childClick.equals("Add More Budget")){
+                   addBudgetDialog();
+               }else if (childClick.equals("Take a Photo")){
+                   takePhoto();
+               }else if (childClick.equals("View Gallery")){
+                   viewGallery();
+               }else if (childClick.equals("View All Moments")){
+                   viewMoments();
+               }else if (childClick.equals("Edit Event")){
+                   editEvent();
+               }else if (childClick.equals("Delete Event")){
+                   deleteEvent();
                }
-               else if (groupPosition==0 && childPosition==1)
-               {
-                   View mView= getLayoutInflater().inflate(R.layout.view_expense,null);
-                   AlertDialog.Builder mBuilder= new AlertDialog.Builder(getContext());
-                   //AlertDialog.Builder(getActivity()).setTitle("expenses").setView(mView).create();
-
-                   mBuilder.setView(mView);
-                   AlertDialog dialog =mBuilder.create();
-                   dialog.show();
-                   Toast.makeText(getContext(), "Dailog add new expanse", Toast.LENGTH_SHORT).show();               }
-               else if(groupPosition==0 && childPosition==2)
-               {
-
-               }
-
-
 
                return false;
            }
        });
         return  view;
     }
+
+    private void deleteEvent() {
+
+    }
+
+    private void editEvent() {
+
+    }
+
+    private void viewMoments() {
+
+    }
+
+    private void viewGallery() {
+
+    }
+
+    private void takePhoto() {
+
+    }
+
+    private void addBudgetDialog() {
+
+    }
+
+    private void viewAllExpenseDialog() {
+
+    }
+
+    private void newExpenseDialog() {
+
+    }
+
     private void initializeData()
     {
-        events = new ArrayList<>();
-        events.add("Expenditure");
-        events.add("Moments");
-        events.add("More on Event");
 
         List<String> Expenditure = new ArrayList<>();
         List<String> Moments = new ArrayList<>();
         List<String> MoreOnEvent = new ArrayList<>();
+
+        eventActionHeading = new ArrayList<>();
+        eventActionHeading.add("Expenditure");
+        eventActionHeading.add("Moments");
+        eventActionHeading.add("More on Event");
 
         Expenditure.add("Add New Expense");
         Expenditure.add("View All Expense");
@@ -139,10 +163,10 @@ public class EventDetailsFragment extends Fragment {
         MoreOnEvent.add("Edit Event");
         MoreOnEvent.add("Delete Event");
 
-        expense = new HashMap<>();
-        expense.put(events.get(0), Expenditure);
-        expense.put(events.get(1), Moments);
-        expense.put(events.get(2), MoreOnEvent);
+        eventActionChild.put(eventActionHeading.get(0), Expenditure);
+        eventActionChild.put(eventActionHeading.get(1), Moments);
+        eventActionChild.put(eventActionHeading.get(2), MoreOnEvent);
+
 
     }
 
