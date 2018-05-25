@@ -50,6 +50,10 @@ public class TourMateDatabase {
         } else {
             Toast.makeText(context, "not found!!!", Toast.LENGTH_SHORT).show();
         }
+        rootRef = FirebaseDatabase.getInstance().getReference().child("Tour Mate");
+        userRef = rootRef.child(user.getUid());
+        eventRef = userRef.child("Event");
+        eventKey = eventRef.push().getKey();
     }
 
     public void addEvent(Event event){

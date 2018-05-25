@@ -107,7 +107,8 @@ public class AddEventFragment extends Fragment implements View.OnClickListener, 
         Event event = new Event(eventKey,eventName,startLocation,destLocation,createdDate,departureDate,budget);
         database.addEvent(event);
         Toast.makeText(getContext(), "Event Created", Toast.LENGTH_SHORT).show();
-        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        FragmentTransaction ft = getActivity().
+                getSupportFragmentManager().beginTransaction();
         ft.replace(R.id.mainLayout,new EventListFragment());
         ft.commit();
     }
