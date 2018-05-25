@@ -17,6 +17,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.nullpointers.toutmate.Model.DateConverter;
@@ -105,12 +107,22 @@ public class AddEventFragment extends Fragment implements View.OnClickListener, 
         double budget = Double.parseDouble(budgetEditText.getText().toString());
         String eventKey = database.getNewEventKey();
         Event event = new Event(eventKey,eventName,startLocation,destLocation,createdDate,departureDate,budget);
-        database.addEvent(event);
-        Toast.makeText(getContext(), "Event Created", Toast.LENGTH_SHORT).show();
-        FragmentTransaction ft = getActivity().
-                getSupportFragmentManager().beginTransaction();
-        ft.replace(R.id.mainLayout,new EventListFragment());
-        ft.commit();
+        Task<Void> task = database.addEvent(event);
+        task.addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()){
+                    Toast.makeText(getContext(), "Event Created", Toast.LENGTH_SHORT).show();
+                    FragmentTransaction ft = getActivity().
+                            getSupportFragmentManager().beginTransaction();
+                    ft.replace(R.id.mainLayout,new EventListFragment());
+                    ft.commit();
+                }else {
+                    Toast.makeText(getContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+
     }
 
     private void chooseStartDate() {

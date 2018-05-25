@@ -91,6 +91,7 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
             @Override
             public void onFailure(@NonNull Exception e) {
                 errorMessageTextView.setText(e.getMessage());
+                progressBar.setVisibility(View.GONE);
             }
         });
     }
