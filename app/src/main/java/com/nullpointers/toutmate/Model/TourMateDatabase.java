@@ -45,18 +45,23 @@ public class TourMateDatabase {
         eventKey = eventRef.push().getKey();
     }
 
-    public void addEvent(Event event){
-        eventRef.child(eventKey).setValue(event);
+    public Task<Void> addEvent(Event event){
+        return eventRef.child(eventKey).setValue(event);
     }
 
-    public void addExpense(String eventKey, String expenseKey, Expense expense){
+    public Task<Void> updateEvent(String eventKey,Event event){
+        return eventRef.child(eventKey).setValue(event);
+    }
+
+
+    public Task<Void> addExpense(String eventKey, String expenseKey, Expense expense){
         expenseRef = eventRef.child(eventKey).child("Expense");
-        expenseRef.child(expenseKey).setValue(expense);
+        return expenseRef.child(expenseKey).setValue(expense);
     }
 
-    public void addMoment(String eventKey, String momentKey, Moment moment){
+    public Task<Void> addMoment(String eventKey, String momentKey, Moment moment){
         momentRef = eventRef.child(eventKey).child("Moment");
-        momentRef.child(momentKey).setValue(moment);
+        return momentRef.child(momentKey).setValue(moment);
     }
 
     public String getNewEventKey(){
@@ -71,6 +76,26 @@ public class TourMateDatabase {
         return  eventRef.child(eventKey).child("Moment").push().getKey();
     }
 
+    public List<Expense> getAllExpenseForEvent(String eventKey){
+        final List<Expense> expenseList = new ArrayList<>();
+        expenseRef = eventRef.child(eventKey).child("Expense");
+        expenseRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot postData: dataSnapshot.getChildren()){
+                    Expense expense = postData.getValue(Expense.class);
+                    expenseList.add(expense);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+                Toast.makeText(context, databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+        return expenseList;
+    }
     public List<Event> getAllEvent(){
         final List<Event> eventList = new ArrayList<>();
         eventRef.addValueEventListener(new ValueEventListener() {

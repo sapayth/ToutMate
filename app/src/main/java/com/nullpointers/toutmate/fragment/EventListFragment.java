@@ -89,6 +89,7 @@ public class EventListFragment extends Fragment {
         eventRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                eventList.clear();
                 for (DataSnapshot postDataSnapshot: dataSnapshot.getChildren()){
                     Event event = postDataSnapshot.getValue(Event.class);
                     eventList.add(event);
