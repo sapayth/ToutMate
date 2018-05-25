@@ -30,12 +30,9 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
     public EventListAdapter(Context context, List<Event> eventList){
         this.context = context;
         this.eventList = eventList;
-<<<<<<< HEAD
         this.date = Calendar.getInstance().getTime();
-=======
         converter = new DateConverter();
         activity = (MainActivity) context;
->>>>>>> cae75b0e3c57b5c02bfd612db8006577d02523c2
     }
 
     @NonNull
@@ -57,11 +54,9 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
         int dayLeft = (int) ((startDate - currentDate)/86400);
 
         holder.eventNameTextView.setText(name);
-<<<<<<< HEAD
 //        holder.createdDateTextView.setText(converter.getDateInString(createDate));
 //        holder.startDateTextView.setText(converter.getDateInString(startDate));
         holder.dayLeftTextView.setText(dayLeft+"");
-=======
         holder.createdDateTextView.setText("Created On : "+converter.getDateInString(createDate));
         holder.startDateTextView.setText("Start On : "+converter.getDateInString(startDate));
         if (dayLeft>0){
@@ -72,7 +67,6 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
         }else {
             holder.dayLeftTextView.setText("Today");
         }
->>>>>>> cae75b0e3c57b5c02bfd612db8006577d02523c2
 
     }
 

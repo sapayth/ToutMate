@@ -75,14 +75,10 @@ public class EventListFragment extends Fragment {
 
         firebaseAuth = FirebaseAuth.getInstance();
         user = firebaseAuth.getCurrentUser();
-<<<<<<< HEAD
-=======
-
         rootRef = FirebaseDatabase.getInstance().getReference().child("Tour Mate");
         userRef = rootRef.child(user.getUid());
         eventRef = userRef.child("Event");
         //eventKey = eventRef.push().getKey();
->>>>>>> cae75b0e3c57b5c02bfd612db8006577d02523c2
 
         database = new TourMateDatabase(getContext(),user);
         layoutManager = new LinearLayoutManager(getContext());
@@ -90,11 +86,9 @@ public class EventListFragment extends Fragment {
         eventListRecyclerView.setHasFixedSize(true);
         eventListRecyclerView.setLayoutManager(layoutManager);
 
-<<<<<<< HEAD
         eventList = database.getAllEvent();
         adapter = new EventListAdapter(getContext(), eventList);
         eventListRecyclerView.setAdapter(adapter);
-=======
         eventRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -120,9 +114,6 @@ public class EventListFragment extends Fragment {
             }
         });
 
-
-
->>>>>>> cae75b0e3c57b5c02bfd612db8006577d02523c2
 
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override

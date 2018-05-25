@@ -17,7 +17,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -54,13 +56,19 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public class NearByFragment extends Fragment implements OnMapReadyCallback {
 
+    private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/" ;
     private GoogleMap map;
     private GoogleMapOptions options;
     private SupportMapFragment mapFragment;
     private Context context;
 
+    private Button findButton;
     private Spinner locationCategorySp;
     private Spinner locationDistanceSp;
+
+    private String searchItem = "locality";
+    private int kilometre = 1500;
+    private boolean isAllSelected = true;
 
     private String[] locationCategories = {
             "All",
@@ -123,6 +131,7 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
 
         locationCategorySp = view.findViewById(R.id.locationCategorySpinner);
         locationDistanceSp = view.findViewById(R.id.locationDistanceSpinner);
+        findButton = view.findViewById(R.id.findLocationButton);
 
         ArrayAdapter<String> categoryArrayAdapter = new ArrayAdapter<String>
                 (getActivity(), android.R.layout.simple_spinner_dropdown_item,
@@ -133,6 +142,108 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
 
         locationCategorySp.setAdapter(categoryArrayAdapter);
         locationDistanceSp.setAdapter(distanceArrayAdapter);
+
+        locationCategorySp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectLocation(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {}
+        });
+
+        locationDistanceSp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectKilometre(position);
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+
+            }
+        });
+
+
+        findButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                getNearbyPlaces();
+            }
+        });
+
+    }
+
+    private void selectKilometre(int position) {
+        switch (position) {
+            case 0:
+                kilometre = 1500;
+                break;
+            case 1:
+                kilometre = 1000;
+                break;
+            case 2:
+                kilometre = 1500;
+                break;
+            case 3:
+                kilometre = 2000;
+                break;
+            case 4:
+                kilometre = 2500;
+                break;
+            case 5:
+                kilometre = 3000;
+                break;
+            case 6:
+                kilometre = 4000;
+                break;
+            case 7:
+                kilometre = 5000;
+                break;
+            case 8:
+                kilometre = 6000;
+                break;
+            case 9:
+                kilometre = 8000;
+                break;
+            case 10:
+                kilometre = 10000;
+                break;
+
+        }
+    }
+
+    private void selectLocation(int position) {
+        switch (position) {
+            case 0:
+                searchItem = "null";
+                break;
+            case 1:
+                searchItem = "restaurant";
+                break;
+            case 2:
+                searchItem = "bank";
+                break;
+            case 3:
+                searchItem = "atm";
+                break;
+            case 4:
+                searchItem = "hospital";
+                break;
+            case 5:
+                searchItem = "shopping_mall";
+                break;
+            case 6:
+                searchItem = "mosque";
+                break;
+            case 7:
+                searchItem = "bus_station";
+                break;
+            case 8:
+                searchItem = "police";
+                break;
+        }
     }
 
     @Override
@@ -164,15 +275,21 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
 
     private void getNearbyPlaces() {
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl("https://maps.googleapis.com/maps/api/place/nearbysearch/")
+                .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
                 .build();
         NearbyPlaceService service = retrofit.create(NearbyPlaceService.class);
         String apiKey = getString(R.string.place_api_key);
-        String url = String.format("json?location=%f,%f&radius=1500&type=restaurant&key=%s",
+        String url = String.format(
+                "json?location=%f,%f&radius=%d&type=%s&key=%s",
                 MainActivity.latitude,
                 MainActivity.longitude,
+                kilometre,
+                searchItem,
                 apiKey);
+
+        Log.d("URL: ", url);
+
         Call<NearbyPlacesResponse> call = service.getNearbyPlaces(url);
 
         call.enqueue(new Callback<NearbyPlacesResponse>() {
@@ -250,16 +367,5 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
 
 
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                    == PackageManager.PERMISSION_GRANTED) {
-                MainActivity.locationManager.requestLocationUpdates(
-                        LocationManager.GPS_PROVIDER, 0, 0, MainActivity.locationListener);
-            }
-        }
-    }
 }
