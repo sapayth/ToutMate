@@ -1,24 +1,24 @@
 package com.nullpointers.toutmate.Model;
 
-import android.net.Uri;
+import java.io.Serializable;
 
-public class Moment {
+public class Moment implements Serializable {
     private String key;
     private String fileName;
     private String formatName;
-    private long date;
-    private String downloadLink;
+    private String date;
+    private String photoPath;
 
     public Moment() {
         //required for firebase
     }
 
-    public Moment(String key, String fileName, String formatName, long date, String downloadLink) {
+    public Moment(String key, String fileName, String formatName, String date, String photoPath) {
         this.key = key;
         this.fileName = fileName;
         this.formatName = formatName;
         this.date = date;
-        this.downloadLink = downloadLink;
+        this.photoPath = photoPath;
     }
 
     public String getKey() {
@@ -33,11 +33,11 @@ public class Moment {
         return formatName;
     }
 
-    public long getDate() {
+    public String getDate() {
         return date;
     }
 
-    public String getDownloadLink() {
-        return downloadLink;
+    public String getPhotoPath() {
+        return photoPath;
     }
 }

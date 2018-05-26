@@ -92,7 +92,7 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
                     Bundle bundle = new Bundle();
                     bundle.putSerializable("Event",eventList.get(position));
                     fragment.setArguments(bundle);
-                    ft.replace(R.id.mainLayout,fragment);
+                    ft.replace(R.id.mainLayout,fragment,"eventDetails");
                     ft.commit();
                 }
             });

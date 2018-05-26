@@ -101,10 +101,26 @@ public class AddEventFragment extends Fragment implements View.OnClickListener, 
     }
 
     private void createEvent() {
+        double budget;
+        if (eventNameEditText.getText().toString().isEmpty()){
+            eventNameEditText.setError("Event Name Required");
+            eventNameEditText.requestFocus();
+            return;
+        }
+        if (destLocationEditText.getText().toString().isEmpty()){
+            destLocationEditText.setError("Destination Location Required");
+            destLocationEditText.requestFocus();
+            return;
+        }
+        if (budgetEditText.getText().toString().isEmpty()){
+            budget = 0;
+        }else {
+            budget = Double.parseDouble(budgetEditText.getText().toString().trim());
+        }
+
         String eventName = eventNameEditText.getText().toString().trim();
         String startLocation = startLocationEditText.getText().toString().trim();
         String destLocation = destLocationEditText.getText().toString().trim();
-        double budget = Double.parseDouble(budgetEditText.getText().toString());
         String eventKey = database.getNewEventKey();
         Event event = new Event(eventKey,eventName,startLocation,destLocation,createdDate,departureDate,budget);
         Task<Void> task = database.addEvent(event);

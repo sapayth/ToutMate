@@ -3,10 +3,16 @@ package com.nullpointers.toutmate.fragment;
 
 import android.app.DatePickerDialog;
 import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
+import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.content.FileProvider;
 import android.support.v7.app.AlertDialog;
+import android.support.v7.widget.GridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,15 +39,21 @@ import com.nullpointers.toutmate.LoginActivity;
 import com.nullpointers.toutmate.Model.DateConverter;
 import com.nullpointers.toutmate.Model.Event;
 import com.nullpointers.toutmate.Model.Expense;
+import com.nullpointers.toutmate.Model.Moment;
 import com.nullpointers.toutmate.Model.TourMateDatabase;
 import com.nullpointers.toutmate.R;
 import com.nullpointers.toutmate.adapter.ExpandableListViewAdapter;
 import com.nullpointers.toutmate.adapter.ExpenseListAdapter;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.TimeZone;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -58,6 +70,7 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
     private DatabaseReference userRef;
     private DatabaseReference eventRef;
     private DatabaseReference expenseRef;
+    private DatabaseReference momentRef;
 
     private Event event;
     private TextView eventNameTextView;
@@ -68,6 +81,7 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
     private ProgressBar budgetStatusProgressBar;
 
     private List<Expense>expenseList = new ArrayList<>();
+    private List<Moment>momentList = new ArrayList<>();
     private String expensePercent = "";
     private String totalBudgetPercent = "100%";
     private String expenseKey;
@@ -80,6 +94,12 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
     private long createdDate;
     private long departureDate;
     private double budget;
+
+    private String fileNameWithFormat;
+    private String fileName;
+    private String captureDate;
+    private String filePath;
+    private String momentKey;
 
     private DateConverter converter = new DateConverter();
 
@@ -147,9 +167,43 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
            totalBudgetPercentTextView.setText(totalBudget);
            expensePercentTextView.setText(expensePercent);
            totalBudgetPercentTextView.setText(totalBudgetPercent);
-
+           expenseRef = eventRef.child(eventKey).child("Expense");
+           momentKey = database.getNewMomentKey(eventKey);
+           momentRef = eventRef.child(eventKey).child("Moment");
         }
 
+        expenseRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                expenseList.clear();
+                for (DataSnapshot postData: dataSnapshot.getChildren()){
+                    Expense expense = postData.getValue(Expense.class);
+                    expenseList.add(expense);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
+
+
+        momentRef.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                momentList.clear();
+                for (DataSnapshot postData : dataSnapshot.getChildren()){
+                    Moment moment = postData.getValue(Moment.class);
+                    momentList.add(moment);
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
+            }
+        });
 
        eventExListView.setOnChildClickListener(new ExpandableListView.OnChildClickListener() {
            @Override
@@ -190,15 +244,40 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
     }
 
     private void viewMoments() {
-
+        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        MomentsFragment momentsFragment = new MomentsFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("event",event);
+        momentsFragment.setArguments(bundle);
+        ft.replace(R.id.mainLayout,momentsFragment);
+        ft.commit();
     }
 
     private void viewGallery() {
-
+        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+        GalleryFragment galleryFragment = new GalleryFragment();
+        Bundle bundle = new Bundle();
+        bundle.putSerializable("event",event);
+        galleryFragment.setArguments(bundle);
+        ft.replace(R.id.mainLayout,galleryFragment);
+        ft.commit();
     }
 
     private void takePhoto() {
-
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        if (intent.resolveActivity(getActivity().getPackageManager())!=null){
+            File file = null;
+            try {
+                file = createImageFile();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            if (file!=null){
+                Uri photoUri = FileProvider.getUriForFile(getContext(), "com.example.android.fileprovider",file);
+                intent.putExtra(MediaStore.EXTRA_OUTPUT,photoUri);
+                getActivity().startActivityForResult(intent,10);
+            }
+        }
     }
 
     private void addBudgetDialog() {
@@ -227,10 +306,18 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
                     public void onComplete(@NonNull Task<Void> task) {
                         if (task.isSuccessful()){
                             Toast.makeText(getContext(), "Budget Added", Toast.LENGTH_SHORT).show();
-                            dialog.dismiss();
                         }
                     }
                 });
+                for (int i = 0; i<expenseList.size(); i++){
+                    Expense expense = expenseList.get(i);
+                    database.addExpense(eventKey,expense.getKey(),expense);
+                }
+                for (int i = 0; i<momentList.size(); i++){
+                    Moment moment = momentList.get(i);
+                    database.addMoment(eventKey,moment.getKey(),moment);
+                }
+                dialog.dismiss();
             }
         });
         cancelBtn.setOnClickListener(new View.OnClickListener() {
@@ -243,15 +330,7 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
     }
 
     private void viewAllExpenseDialog() {
-        expenseRef = eventRef.child(eventKey).child("Expense");
-        expenseRef.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                expenseList.clear();
-                for (DataSnapshot postData: dataSnapshot.getChildren()){
-                    Expense expense = postData.getValue(Expense.class);
-                    expenseList.add(expense);
-                }
+
                 AlertDialog.Builder expenseDialog = new AlertDialog.Builder(getContext());
                 expenseDialog.setCancelable(false);
                 View view = getLayoutInflater().inflate(R.layout.expense_list,null);
@@ -274,15 +353,9 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
                     emptyExpense.setVisibility(View.VISIBLE);
                 }
                 dialog.show();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
 
     }
+
 
     private void newExpenseDialog() {
         View view = dialogInflater.inflate(R.layout.add_new_expense,null);
@@ -387,5 +460,51 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
     public void onDateSet(DatePicker view, int year, int month, int dayOfMonth) {
         expenseDate = converter.getDateInUnix(dayOfMonth+"/"+(month+1)+"/"+year);
         expenseDateET.setText(converter.getDateInString(expenseDate));
+    }
+
+    private File createImageFile () throws IOException {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd_HHmmss");
+        dateFormat.setTimeZone(TimeZone.getTimeZone("GMT+6:00"));
+        String timestamp = dateFormat.format(new Date());
+        dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss:a");
+        captureDate = dateFormat.format(new Date());
+        String imageFileName = "JPEG_"+timestamp;
+        fileNameWithFormat = imageFileName+".jpg";
+        File storageDir = getActivity().getExternalFilesDir(Environment.DIRECTORY_PICTURES);
+        String[] totalFiles = storageDir.list();
+        int countTotalFile = totalFiles.length;
+        fileName = "Capture "+countTotalFile;
+        File imageFile = File.createTempFile(imageFileName,".jpg",storageDir);
+        filePath = imageFile.getAbsolutePath();
+        return imageFile;
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        addMoment();
+
+    }
+
+    private void addMoment() {
+        final Moment moment = new Moment(momentKey,fileName, fileNameWithFormat, captureDate, filePath);
+        Task<Void> task = database.addMoment(eventKey,momentKey,moment);
+        task.addOnCompleteListener(new OnCompleteListener<Void>() {
+            @Override
+            public void onComplete(@NonNull Task<Void> task) {
+                if (task.isSuccessful()){
+                    Toast.makeText(getContext(), "Moment Added", Toast.LENGTH_SHORT).show();
+                    FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+                    MomentsFragment momentsFragment = new MomentsFragment();
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable("event",event);
+                    momentsFragment.setArguments(bundle);
+                    ft.replace(R.id.mainLayout,momentsFragment);
+                    ft.commit();
+                }else {
+                    Toast.makeText(getContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
     }
 }
