@@ -9,6 +9,7 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -74,18 +75,20 @@ public class EventListFragment extends Fragment {
 
         firebaseAuth = FirebaseAuth.getInstance();
         user = firebaseAuth.getCurrentUser();
-
         rootRef = FirebaseDatabase.getInstance().getReference().child("Tour Mate");
         userRef = rootRef.child(user.getUid());
         eventRef = userRef.child("Event");
         //eventKey = eventRef.push().getKey();
 
-        database = new TourMateDatabase(getContext(),firebaseAuth.getCurrentUser());
+        database = new TourMateDatabase(getContext(),user);
         layoutManager = new LinearLayoutManager(getContext());
 
         eventListRecyclerView.setHasFixedSize(true);
         eventListRecyclerView.setLayoutManager(layoutManager);
 
+        eventList = database.getAllEvent();
+        adapter = new EventListAdapter(getContext(), eventList);
+        eventListRecyclerView.setAdapter(adapter);
         eventRef.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -110,8 +113,6 @@ public class EventListFragment extends Fragment {
                 Toast.makeText(getContext(), databaseError.getMessage(), Toast.LENGTH_SHORT).show();
             }
         });
-
-
 
 
         addButton.setOnClickListener(new View.OnClickListener() {

@@ -24,7 +24,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.nullpointers.toutmate.fragment.EventListFragment;
 import com.nullpointers.toutmate.fragment.NearByFragment;
@@ -32,11 +37,10 @@ import com.nullpointers.toutmate.fragment.NearByFragment;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    public static LocationManager locationManager;
-    public static LocationListener locationListener;
+    private FusedLocationProviderClient client;
 
-    public static double latitude = 0;
-    public static double longitude = 0;
+    public static double latitude;
+    public static double longitude;
 
     private Toolbar toolbar;
     private DrawerLayout drawer;
@@ -53,38 +57,9 @@ public class MainActivity extends AppCompatActivity
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         firebaseAuth = FirebaseAuth.getInstance();
 
-        locationManager = (LocationManager) this.getSystemService(LOCATION_SERVICE);
-        locationListener = new LocationListener() {
-            @Override
-            public void onLocationChanged(Location location) {
-                latitude = location.getLatitude();
-                longitude = location.getLongitude();
-            }
+        client = LocationServices.getFusedLocationProviderClient(this);
 
-            @Override
-            public void onStatusChanged(String provider, int status, Bundle extras) {
-
-            }
-
-            @Override
-            public void onProviderEnabled(String provider) {
-
-            }
-
-            @Override
-            public void onProviderDisabled(String provider) {
-
-            }
-        };
-
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-
-            ActivityCompat.requestPermissions(this,
-                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    501);
-        } else {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-        }
+        getLocations();
 
         setSupportActionBar(toolbar);
 
@@ -113,6 +88,37 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         displaySelectedScreen(id);
         return true;
+    }
+
+    public void getLocations() {
+        checkLocationPermission();
+        client.getLastLocation()
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Toast.makeText(MainActivity.this, "Finding location failed", Toast.LENGTH_SHORT).show();
+                        Log.e("Location error: ", e.getMessage());
+                    }
+                })
+                .addOnSuccessListener(new OnSuccessListener<Location>() {
+                @Override
+                public void onSuccess(Location location) {
+                    latitude = location.getLatitude();
+                    longitude = location.getLongitude();
+
+                    Log.d("lat: ", latitude + "");
+                    Log.d("lon: ", longitude + "");
+                }
+            });
+    }
+
+    private void checkLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this,
+                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
+                    501);
+            return;
+        }
     }
 
     public void displaySelectedScreen(int selectedMenuId){
@@ -153,11 +159,8 @@ public class MainActivity extends AppCompatActivity
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION)
-            == PackageManager.PERMISSION_GRANTED) {
-                locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 0, 0, locationListener);
-            }
+        if (requestCode == 501 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            getLocations();
         }
     }
 }
