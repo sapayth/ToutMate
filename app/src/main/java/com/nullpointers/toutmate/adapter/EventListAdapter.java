@@ -16,6 +16,7 @@ import com.nullpointers.toutmate.Model.Event;
 import com.nullpointers.toutmate.R;
 import com.nullpointers.toutmate.fragment.EventDetailsFragment;
 
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 
@@ -29,6 +30,7 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
     public EventListAdapter(Context context, List<Event> eventList){
         this.context = context;
         this.eventList = eventList;
+        this.date = Calendar.getInstance().getTime();
         converter = new DateConverter();
         activity = (MainActivity) context;
     }
@@ -52,6 +54,9 @@ public class EventListAdapter extends RecyclerView.Adapter<EventListAdapter.Even
         int dayLeft = (int) ((startDate - currentDate)/86400);
 
         holder.eventNameTextView.setText(name);
+//        holder.createdDateTextView.setText(converter.getDateInString(createDate));
+//        holder.startDateTextView.setText(converter.getDateInString(startDate));
+        holder.dayLeftTextView.setText(dayLeft+"");
         holder.createdDateTextView.setText("Created On : "+converter.getDateInString(createDate));
         holder.startDateTextView.setText("Start On : "+converter.getDateInString(startDate));
         if (dayLeft>0){
