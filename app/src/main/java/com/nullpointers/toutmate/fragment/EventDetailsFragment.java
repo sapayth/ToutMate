@@ -40,6 +40,7 @@ import com.nullpointers.toutmate.Model.DateConverter;
 import com.nullpointers.toutmate.Model.Event;
 import com.nullpointers.toutmate.Model.Expense;
 import com.nullpointers.toutmate.Model.Moment;
+import com.nullpointers.toutmate.Model.NetworkConnectivity;
 import com.nullpointers.toutmate.Model.TourMateDatabase;
 import com.nullpointers.toutmate.R;
 import com.nullpointers.toutmate.adapter.ExpandableListViewAdapter;
@@ -301,21 +302,29 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
                 budget = budget+amount;
                 Event event = new Event(eventKey,eventName,startingLocation,destinationLocation,createdDate,departureDate,budget);
                 Task<Void> task = database.updateEvent(eventKey,event);
-                task.addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()){
-                            Toast.makeText(getContext(), "Budget Added", Toast.LENGTH_SHORT).show();
+                if (NetworkConnectivity.isNetworkAvailable(getContext())){
+                    task.addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()){
+                                Toast.makeText(getContext(), "Budget Added", Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
-                for (int i = 0; i<expenseList.size(); i++){
-                    Expense expense = expenseList.get(i);
-                    database.addExpense(eventKey,expense.getKey(),expense);
+                    });
+                }else {
+                    Toast.makeText(getContext(), "Budget Added", Toast.LENGTH_SHORT).show();
                 }
-                for (int i = 0; i<momentList.size(); i++){
-                    Moment moment = momentList.get(i);
-                    database.addMoment(eventKey,moment.getKey(),moment);
+                if (expenseList.size()>0){
+                    for (int i = 0; i<expenseList.size(); i++){
+                        Expense expense = expenseList.get(i);
+                        database.addExpense(eventKey,expense.getKey(),expense);
+                    }
+                }
+                if (momentList.size()>0){
+                    for (int i = 0; i<momentList.size(); i++){
+                        Moment moment = momentList.get(i);
+                        database.addMoment(eventKey,moment.getKey(),moment);
+                    }
                 }
                 dialog.dismiss();
             }
@@ -399,18 +408,22 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
                 expenseKey = database.getNewExpenseKey(eventKey);
                 Expense expense = new Expense(expenseKey,expenseName,expenseAmount,comment,expenseDate);
                 Task<Void> task = database.addExpense(eventKey,expenseKey,expense);
-                task.addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()){
-                            Toast.makeText(getContext(), "Expense Added", Toast.LENGTH_SHORT).show();
-                            alertDialog.dismiss();
-                        }else {
-                            Toast.makeText(getContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                if (NetworkConnectivity.isNetworkAvailable(getContext())){
+                    task.addOnCompleteListener(new OnCompleteListener<Void>() {
+                        @Override
+                        public void onComplete(@NonNull Task<Void> task) {
+                            if (task.isSuccessful()){
+                                Toast.makeText(getContext(), "Expense Added", Toast.LENGTH_SHORT).show();
+                                alertDialog.dismiss();
+                            }else {
+                                Toast.makeText(getContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                            }
                         }
-                    }
-                });
-
+                    });
+                }else {
+                    Toast.makeText(getContext(), "Expense Added", Toast.LENGTH_SHORT).show();
+                    alertDialog.dismiss();
+                }
             }
         });
 
@@ -489,22 +502,34 @@ public class EventDetailsFragment extends Fragment implements DatePickerDialog.O
     private void addMoment() {
         final Moment moment = new Moment(momentKey,fileName, fileNameWithFormat, captureDate, filePath);
         Task<Void> task = database.addMoment(eventKey,momentKey,moment);
-        task.addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()){
-                    Toast.makeText(getContext(), "Moment Added", Toast.LENGTH_SHORT).show();
-                    FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
-                    MomentsFragment momentsFragment = new MomentsFragment();
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable("event",event);
-                    momentsFragment.setArguments(bundle);
-                    ft.replace(R.id.mainLayout,momentsFragment);
-                    ft.commit();
-                }else {
-                    Toast.makeText(getContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+        if (NetworkConnectivity.isNetworkAvailable(getContext())){
+            task.addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()){
+                        Toast.makeText(getContext(), "Moment Added", Toast.LENGTH_SHORT).show();
+                        FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+                        MomentsFragment momentsFragment = new MomentsFragment();
+                        Bundle bundle = new Bundle();
+                        bundle.putSerializable("event",event);
+                        momentsFragment.setArguments(bundle);
+                        ft.replace(R.id.mainLayout,momentsFragment);
+                        ft.commit();
+                    }else {
+                        Toast.makeText(getContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 }
-            }
-        });
+            });
+        }else {
+            Toast.makeText(getContext(), "Moment Added", Toast.LENGTH_SHORT).show();
+            FragmentTransaction ft = getActivity().getSupportFragmentManager().beginTransaction();
+            MomentsFragment momentsFragment = new MomentsFragment();
+            Bundle bundle = new Bundle();
+            bundle.putSerializable("event",event);
+            momentsFragment.setArguments(bundle);
+            ft.replace(R.id.mainLayout,momentsFragment);
+            ft.commit();
+        }
+
     }
 }

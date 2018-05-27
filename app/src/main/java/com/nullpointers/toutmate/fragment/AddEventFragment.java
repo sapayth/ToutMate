@@ -23,6 +23,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.nullpointers.toutmate.Model.DateConverter;
 import com.nullpointers.toutmate.Model.Event;
+import com.nullpointers.toutmate.Model.NetworkConnectivity;
 import com.nullpointers.toutmate.Model.TourMateDatabase;
 import com.nullpointers.toutmate.R;
 
@@ -124,20 +125,29 @@ public class AddEventFragment extends Fragment implements View.OnClickListener, 
         String eventKey = database.getNewEventKey();
         Event event = new Event(eventKey,eventName,startLocation,destLocation,createdDate,departureDate,budget);
         Task<Void> task = database.addEvent(event);
-        task.addOnCompleteListener(new OnCompleteListener<Void>() {
-            @Override
-            public void onComplete(@NonNull Task<Void> task) {
-                if (task.isSuccessful()){
-                    Toast.makeText(getContext(), "Event Created", Toast.LENGTH_SHORT).show();
-                    FragmentTransaction ft = getActivity().
-                            getSupportFragmentManager().beginTransaction();
-                    ft.replace(R.id.mainLayout,new EventListFragment());
-                    ft.commit();
-                }else {
-                    Toast.makeText(getContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+        if (NetworkConnectivity.isNetworkAvailable(getContext())){
+            task.addOnCompleteListener(new OnCompleteListener<Void>() {
+                @Override
+                public void onComplete(@NonNull Task<Void> task) {
+                    if (task.isSuccessful()){
+                        Toast.makeText(getContext(), "Event Created", Toast.LENGTH_SHORT).show();
+                        FragmentTransaction ft = getActivity().
+                                getSupportFragmentManager().beginTransaction();
+                        ft.replace(R.id.mainLayout,new EventListFragment());
+                        ft.commit();
+                    }else {
+                        Toast.makeText(getContext(), task.getException().getMessage(), Toast.LENGTH_SHORT).show();
+                    }
                 }
-            }
-        });
+            });
+        }else {
+            Toast.makeText(getContext(), "Event Created", Toast.LENGTH_SHORT).show();
+            FragmentTransaction ft = getActivity().
+                    getSupportFragmentManager().beginTransaction();
+            ft.replace(R.id.mainLayout,new EventListFragment());
+            ft.commit();
+        }
+
 
     }
 

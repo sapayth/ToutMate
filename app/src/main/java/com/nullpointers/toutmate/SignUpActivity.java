@@ -19,6 +19,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.nullpointers.toutmate.Model.NetworkConnectivity;
 import com.nullpointers.toutmate.Model.TourMateDatabase;
 import com.nullpointers.toutmate.Model.User;
 
@@ -103,37 +104,42 @@ public class SignUpActivity extends AppCompatActivity implements View.OnClickLis
 
         progressBar.setVisibility(View.VISIBLE);
 
-        firebaseAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if (task.isSuccessful()){
-                    firebaseUser = firebaseAuth.getCurrentUser();
-                    User user = new User(name,phone,email);
-                    userRef = rootRef.child(firebaseAuth.getCurrentUser().getUid());
-                    userInfoRef = userRef.child("UserInfo");
-                    userInfoRef.setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
-                        @Override
-                        public void onComplete(@NonNull Task<Void> task) {
-                            progressBar.setVisibility(View.GONE);
-                            if (task.isSuccessful()){
-                                Toast.makeText(SignUpActivity.this, "User Created Successfully", Toast.LENGTH_SHORT).show();
-                                gotoHomePage();
+        if (NetworkConnectivity.isNetworkAvailable(this)){
+            firebaseAuth.createUserWithEmailAndPassword(email,password).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()){
+                        firebaseUser = firebaseAuth.getCurrentUser();
+                        User user = new User(name,phone,email);
+                        userRef = rootRef.child(firebaseAuth.getCurrentUser().getUid());
+                        userInfoRef = userRef.child("UserInfo");
+                        userInfoRef.setValue(user).addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                progressBar.setVisibility(View.GONE);
+                                if (task.isSuccessful()){
+                                    Toast.makeText(SignUpActivity.this, "User Created Successfully", Toast.LENGTH_SHORT).show();
+                                    gotoHomePage();
+                                }
                             }
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-                        }
-                    });
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception e) {
+                                Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                            }
+                        });
+                    }
                 }
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
-            }
-        });
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    Toast.makeText(SignUpActivity.this, e.getMessage(), Toast.LENGTH_LONG).show();
+                }
+            });
+        }else {
+            Toast.makeText(this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+        }
+
     }
 
     private void gotoHomePage() {

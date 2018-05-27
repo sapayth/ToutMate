@@ -65,14 +65,14 @@ public class MomentListAdapter extends RecyclerView.Adapter<MomentListAdapter.Mo
             photoNameTextView = itemView.findViewById(R.id.fileNameTextView);
             photoNameWithFormatTextView = itemView.findViewById(R.id.fileNameWithFormat);
             dateTextView = itemView.findViewById(R.id.captureDateTextView);
-            /*editImageButton = itemView.findViewById(R.id.editImageButton);
+            editImageButton = itemView.findViewById(R.id.editImageButton);
 
             editImageButton.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
 
                 }
-            });*/
+            });
         }
 
     }

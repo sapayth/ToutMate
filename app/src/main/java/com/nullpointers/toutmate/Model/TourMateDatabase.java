@@ -40,6 +40,7 @@ public class TourMateDatabase {
         this.user = user;
         firebaseAuth = FirebaseAuth.getInstance();
         rootRef = FirebaseDatabase.getInstance().getReference().child("Tour Mate");
+        rootRef.keepSynced(true);
         userRef = rootRef.child(user.getUid());
         eventRef = userRef.child("Event");
         eventKey = eventRef.push().getKey();

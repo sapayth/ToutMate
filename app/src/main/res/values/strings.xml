@@ -7,11 +7,22 @@
     <string name="place_api_key">AIzaSyBTGG4xgpKg8IIOkYlYpYHOOfpKLsK6Bj4</string>
     <string name="direction_api_key">AIzaSyBUvBqaRgMCsmoKuaIZMVfCZN4z3vB_bJY</string>
 
+    <string name="weather_api_key">3f69d247df7198a8e59331db97d731e1</string>
+
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
 
     <string name="email_hint">Email</string>
     <string name="pass_hint">Password</string>
+
+
+    <string name="no_data_found_yet">No Data Found Yet</string>
+    <string name="search">search</string>
+    <string name="sun_rise">Sun Rise</string>
+    <string name="sun_set">Sun Set</string>
+    <string name="humidity">Humidity</string>
+    <string name="pressure">Pressure</string>
+
 
     <string name="full_name">Full Name</string>
     <string name="email">Email</string>

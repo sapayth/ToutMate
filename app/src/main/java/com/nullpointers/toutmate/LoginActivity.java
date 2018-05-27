@@ -16,6 +16,7 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
+import com.nullpointers.toutmate.Model.NetworkConnectivity;
 
 public class LoginActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -76,24 +77,30 @@ public class LoginActivity extends AppCompatActivity implements View.OnClickList
         }
 
         progressBar.setVisibility(View.VISIBLE);
-        firebaseAuth.signInWithEmailAndPassword(email,pass).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
-            @Override
-            public void onComplete(@NonNull Task<AuthResult> task) {
-                if (task.isSuccessful()){
-                    progressBar.setVisibility(View.GONE);
-                    Toast.makeText(LoginActivity.this, "Login Successfully", Toast.LENGTH_SHORT).show();
-                    startActivity(new Intent(LoginActivity.this,MainActivity.class));
-                }else {
-                    errorMessageTextView.setText(task.getException().getMessage());
+        if (NetworkConnectivity.isNetworkAvailable(this)){
+            firebaseAuth.signInWithEmailAndPassword(email,pass).addOnCompleteListener(new OnCompleteListener<AuthResult>() {
+                @Override
+                public void onComplete(@NonNull Task<AuthResult> task) {
+                    if (task.isSuccessful()){
+                        progressBar.setVisibility(View.GONE);
+                        Toast.makeText(LoginActivity.this, "Login Successfully", Toast.LENGTH_SHORT).show();
+                        startActivity(new Intent(LoginActivity.this,MainActivity.class));
+                    }else {
+                        errorMessageTextView.setText(task.getException().getMessage());
+                    }
                 }
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                errorMessageTextView.setText(e.getMessage());
-                progressBar.setVisibility(View.GONE);
-            }
-        });
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception e) {
+                    errorMessageTextView.setText(e.getMessage());
+                    progressBar.setVisibility(View.GONE);
+                }
+            });
+        }else {
+            Toast.makeText(this, "No Internet Connection", Toast.LENGTH_SHORT).show();
+            progressBar.setVisibility(View.GONE);
+        }
+
     }
 
     @Override
