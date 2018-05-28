@@ -13,6 +13,8 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.ContextCompat;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -20,6 +22,7 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
@@ -37,6 +40,7 @@ import com.nullpointers.toutmate.Direction.DirectionService;
 import com.nullpointers.toutmate.Direction.Step;
 import com.nullpointers.toutmate.MainActivity;
 import com.nullpointers.toutmate.Nearby.Location;
+import com.nullpointers.toutmate.Nearby.NearbyPlaceAdapter;
 import com.nullpointers.toutmate.Nearby.NearbyPlaceService;
 import com.nullpointers.toutmate.Nearby.NearbyPlacesResponse;
 import com.nullpointers.toutmate.Nearby.Result;
@@ -65,13 +69,15 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
     private Button findButton;
     private Spinner locationCategorySp;
     private Spinner locationDistanceSp;
+    private FrameLayout mapContainer;
 
     private String searchItem = "locality";
     private int kilometre = 1500;
-    private boolean isAllSelected = true;
+
+    private RecyclerView recyclerView;
+    private RecyclerView.Adapter adapter;
 
     private String[] locationCategories = {
-            "All",
             "Restaurant",
             "Bank",
             "ATM",
@@ -132,6 +138,7 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
         locationCategorySp = view.findViewById(R.id.locationCategorySpinner);
         locationDistanceSp = view.findViewById(R.id.locationDistanceSpinner);
         findButton = view.findViewById(R.id.findLocationButton);
+        mapContainer = view.findViewById(R.id.mapContainer);
 
         ArrayAdapter<String> categoryArrayAdapter = new ArrayAdapter<String>
                 (getActivity(), android.R.layout.simple_spinner_dropdown_item,
@@ -143,28 +150,27 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
         locationCategorySp.setAdapter(categoryArrayAdapter);
         locationDistanceSp.setAdapter(distanceArrayAdapter);
 
-        locationCategorySp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectLocation(position);
-            }
+//        locationCategorySp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                selectLocation(position);
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {}
+//        });
 
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {}
-        });
-
-        locationDistanceSp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectKilometre(position);
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> parent) {
-
-            }
-        });
-
+//        locationDistanceSp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+//            @Override
+//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+//                selectKilometre(position);
+//            }
+//
+//            @Override
+//            public void onNothingSelected(AdapterView<?> parent) {
+//
+//            }
+//        });
 
         findButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -172,6 +178,10 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
                 getNearbyPlaces();
             }
         });
+
+        recyclerView = view.findViewById(R.id.placeRecyclerView);
+        recyclerView.setHasFixedSize(true);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
 
     }
 
@@ -210,37 +220,33 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
             case 10:
                 kilometre = 10000;
                 break;
-
         }
     }
 
     private void selectLocation(int position) {
         switch (position) {
             case 0:
-                searchItem = "null";
-                break;
-            case 1:
                 searchItem = "restaurant";
                 break;
-            case 2:
+            case 1:
                 searchItem = "bank";
                 break;
-            case 3:
+            case 2:
                 searchItem = "atm";
                 break;
-            case 4:
+            case 3:
                 searchItem = "hospital";
                 break;
-            case 5:
+            case 4:
                 searchItem = "shopping_mall";
                 break;
-            case 6:
+            case 5:
                 searchItem = "mosque";
                 break;
-            case 7:
+            case 6:
                 searchItem = "bus_station";
                 break;
-            case 8:
+            case 7:
                 searchItem = "police";
                 break;
         }
@@ -274,6 +280,9 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
     }
 
     private void getNearbyPlaces() {
+        selectKilometre(locationDistanceSp.getSelectedItemPosition());
+        selectLocation(locationCategorySp.getSelectedItemPosition());
+
         Retrofit retrofit = new Retrofit.Builder()
                 .baseUrl(BASE_URL)
                 .addConverterFactory(GsonConverterFactory.create())
@@ -288,7 +297,7 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
                 searchItem,
                 apiKey);
 
-        Log.d("URL: ", url);
+        System.out.println(url);
 
         Call<NearbyPlacesResponse> call = service.getNearbyPlaces(url);
 
@@ -299,12 +308,11 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
                     NearbyPlacesResponse nearbyPlacesResponse = response.body();
                     List<Result> resultList = nearbyPlacesResponse.getResults();
 
-                    for (int i = 0; i < resultList.size(); i++) {
-                        Location location = resultList.get(i).getGeometry().getLocation();
-                        LatLng latLng = new LatLng(location.getLat(), location.getLng());
-                        map.addMarker(new MarkerOptions().position(latLng));
-                        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
-                    }
+                    adapter = new NearbyPlaceAdapter(resultList, getContext());
+                    recyclerView.setAdapter(adapter);
+
+                    mapContainer.setVisibility(View.GONE);
+                    recyclerView.setVisibility(View.VISIBLE);
                 }
             }
 
@@ -315,6 +323,17 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
             }
         });
 
+    }
+
+    private void setMarker(List<Result> resultList) {
+        map.clear();
+
+        for (int i = 0; i < resultList.size(); i++) {
+            Location location = resultList.get(i).getGeometry().getLocation();
+            LatLng latLng = new LatLng(location.getLat(), location.getLng());
+            map.addMarker(new MarkerOptions().position(latLng));
+            map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
+        }
     }
 
     private void getDirections(LatLng startPoint, LatLng endPoint) {

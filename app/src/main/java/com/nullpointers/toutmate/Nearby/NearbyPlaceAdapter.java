@@ -1,0 +1,71 @@
+package com.nullpointers.toutmate.Nearby;
+
+import android.content.Context;
+import android.support.annotation.NonNull;
+import android.support.v7.widget.RecyclerView;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.RatingBar;
+import android.widget.TextView;
+
+import com.nullpointers.toutmate.R;
+import com.squareup.picasso.Picasso;
+
+import java.util.List;
+
+public class NearbyPlaceAdapter extends RecyclerView.Adapter<NearbyPlaceAdapter.PlaceViewHolder> {
+
+    private List<Result> placeList;
+    private Context context;
+
+    public NearbyPlaceAdapter(List<Result> placeList, Context context) {
+        this.placeList = placeList;
+        this.context = context;
+    }
+
+    @NonNull
+    @Override
+    public PlaceViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        View view = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.place_list_item, parent, false);
+
+        return new PlaceViewHolder(view);
+    }
+
+    @Override
+    public void onBindViewHolder(@NonNull PlaceViewHolder holder, int position) {
+        Result currentPlace = placeList.get(position);
+
+        //holder.placeImageView.setImageResource(R.mipmap.ic_launcher);
+        holder.placeNameTV.setText(currentPlace.getName());
+//        holder.placeRatingBar.setRating(currentPlace.getRating().floatValue());
+        holder.placeAddressTV.setText(currentPlace.getVicinity());
+
+        Picasso.get().load("http://i.imgur.com/DvpvklR.png").into(holder.placeImageView);
+
+    }
+
+    @Override
+    public int getItemCount() {
+        return placeList.size();
+    }
+
+    public class PlaceViewHolder extends RecyclerView.ViewHolder {
+
+        private ImageView placeImageView;
+        private TextView placeNameTV;
+        private RatingBar placeRatingBar;
+        private TextView placeAddressTV;
+
+        public PlaceViewHolder(View itemView) {
+            super(itemView);
+
+            placeImageView = itemView.findViewById(R.id.placeImageView);
+            placeNameTV = itemView.findViewById(R.id.placeNameTextView);
+            placeRatingBar = itemView.findViewById(R.id.placeRatingBar);
+            placeAddressTV = itemView.findViewById(R.id.placeAddressTextView);
+        }
+    }
+}
