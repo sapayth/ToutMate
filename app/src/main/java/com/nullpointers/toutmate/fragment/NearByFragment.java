@@ -44,6 +44,7 @@ import com.nullpointers.toutmate.Nearby.NearbyPlaceAdapter;
 import com.nullpointers.toutmate.Nearby.NearbyPlaceService;
 import com.nullpointers.toutmate.Nearby.NearbyPlacesResponse;
 import com.nullpointers.toutmate.Nearby.Result;
+import com.nullpointers.toutmate.PlaceDetailsFragment;
 import com.nullpointers.toutmate.R;
 
 import java.util.ArrayList;
@@ -274,8 +275,6 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
 //            Log.d("Lon: ", MainActivity.longitude + "");
 
             // getDirections();
-
-            getNearbyPlaces();
         }
     }
 
@@ -306,13 +305,39 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
             public void onResponse(Call<NearbyPlacesResponse> call, Response<NearbyPlacesResponse> response) {
                 if (response.code() == 200) {
                     NearbyPlacesResponse nearbyPlacesResponse = response.body();
-                    List<Result> resultList = nearbyPlacesResponse.getResults();
+                    final List<Result> resultList = nearbyPlacesResponse.getResults();
 
                     adapter = new NearbyPlaceAdapter(resultList, getContext());
                     recyclerView.setAdapter(adapter);
 
                     mapContainer.setVisibility(View.GONE);
                     recyclerView.setVisibility(View.VISIBLE);
+
+                    recyclerView.setOnClickListener(new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            int itemPosition = recyclerView.getChildLayoutPosition(v);
+//                            Result clickedResult = resultList.get(itemPosition);
+//
+//                            // Create fragment and give it an argument specifying the article it should show
+//                            PlaceDetailsFragment placeDetailsFragment = new PlaceDetailsFragment();
+//                            Bundle args = new Bundle();
+//                            args.putSerializable("result", clickedResult);
+//                            placeDetailsFragment.setArguments(args);
+//
+//                            FragmentTransaction transaction = getFragmentManager().beginTransaction();
+//
+//                            // Replace whatever is in the fragment_container view with this fragment,
+//                            // and add the transaction to the back stack so the user can navigate back
+//                            transaction.replace(R.layout.fragment_near_by, placeDetailsFragment);
+//                            transaction.addToBackStack(null);
+//
+//                            // Commit the transaction
+//                            transaction.commit();
+
+                            Toast.makeText(getContext(), itemPosition + "", Toast.LENGTH_SHORT).show();
+                        }
+                    });
                 }
             }
 
@@ -322,7 +347,6 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
                 Log.e("Nearby Place Error: ", t.getMessage());
             }
         });
-
     }
 
     private void setMarker(List<Result> resultList) {
@@ -383,8 +407,4 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
             }
         });
     }
-
-
-
-
 }

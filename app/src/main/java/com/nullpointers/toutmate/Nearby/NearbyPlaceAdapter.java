@@ -1,7 +1,9 @@
 package com.nullpointers.toutmate.Nearby;
 
 import android.content.Context;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.v4.app.FragmentTransaction;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -10,7 +12,10 @@ import android.widget.ImageView;
 import android.widget.RatingBar;
 import android.widget.TextView;
 
+import com.nullpointers.toutmate.MainActivity;
+import com.nullpointers.toutmate.PlaceDetailsFragment;
 import com.nullpointers.toutmate.R;
+import com.nullpointers.toutmate.fragment.EventDetailsFragment;
 import com.squareup.picasso.Picasso;
 
 import java.util.List;
@@ -19,10 +24,12 @@ public class NearbyPlaceAdapter extends RecyclerView.Adapter<NearbyPlaceAdapter.
 
     private List<Result> placeList;
     private Context context;
+    private MainActivity activity;
 
     public NearbyPlaceAdapter(List<Result> placeList, Context context) {
         this.placeList = placeList;
         this.context = context;
+        activity = (MainActivity) context;
     }
 
     @NonNull
@@ -66,6 +73,24 @@ public class NearbyPlaceAdapter extends RecyclerView.Adapter<NearbyPlaceAdapter.
             placeNameTV = itemView.findViewById(R.id.placeNameTextView);
             placeRatingBar = itemView.findViewById(R.id.placeRatingBar);
             placeAddressTV = itemView.findViewById(R.id.placeAddressTextView);
+
+            itemView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+
+                    int itemPosition = getLayoutPosition();
+                    Result clickedResult = placeList.get(itemPosition);
+
+                    PlaceDetailsFragment fragment = new PlaceDetailsFragment();
+                    FragmentTransaction ft = activity.getSupportFragmentManager().beginTransaction();
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable("result", clickedResult);
+                    fragment.setArguments(bundle);
+                    ft.replace(R.id.placeLayout, fragment,"placeDetails");
+                    ft.addToBackStack(null);
+                    ft.commit();
+                }
+            });
         }
     }
 }
