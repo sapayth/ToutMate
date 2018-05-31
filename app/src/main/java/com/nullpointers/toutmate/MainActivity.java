@@ -59,8 +59,6 @@ public class MainActivity extends AppCompatActivity
 
         client = LocationServices.getFusedLocationProviderClient(this);
 
-        getLocations();
-
         setSupportActionBar(toolbar);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -88,28 +86,6 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         displaySelectedScreen(id);
         return true;
-    }
-
-    public void getLocations() {
-        checkLocationPermission();
-        client.getLastLocation()
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Toast.makeText(MainActivity.this, "Finding location failed", Toast.LENGTH_SHORT).show();
-                        Log.e("Location error: ", e.getMessage());
-                    }
-                })
-                .addOnSuccessListener(new OnSuccessListener<Location>() {
-                @Override
-                public void onSuccess(Location location) {
-                    latitude = location.getLatitude();
-                    longitude = location.getLongitude();
-
-                    Log.d("lat: ", latitude + "");
-                    Log.d("lon: ", longitude + "");
-                }
-            });
     }
 
     private void checkLocationPermission() {
@@ -153,15 +129,6 @@ public class MainActivity extends AppCompatActivity
     private void logoutUser() {
         firebaseAuth.signOut();
         startActivity(new Intent(MainActivity.this,LoginActivity.class));
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-
-        if (requestCode == 501 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            getLocations();
-        }
     }
 
     @Override

@@ -45,13 +45,22 @@ public class NearbyPlaceAdapter extends RecyclerView.Adapter<NearbyPlaceAdapter.
     public void onBindViewHolder(@NonNull PlaceViewHolder holder, int position) {
         Result currentPlace = placeList.get(position);
 
+        String key = context.getString(R.string.place_api_key);
+
+        if (currentPlace.getPhotos() != null && currentPlace.getPhotos().size() > 0) {
+            String url = String.format(
+                    "https://maps.googleapis.com/maps/api/place/photo?maxwidth=200&photoreference=%s&key=%s",
+                    currentPlace.getPhotos().get(0).getPhotoReference(),
+                    key);
+            Picasso.get().load(url).into(holder.placeImageView);
+        } else {
+            holder.placeImageView.setImageResource(R.drawable.ic_menu_camera);
+        }
+
         //holder.placeImageView.setImageResource(R.mipmap.ic_launcher);
         holder.placeNameTV.setText(currentPlace.getName());
 //        holder.placeRatingBar.setRating(currentPlace.getRating().floatValue());
         holder.placeAddressTV.setText(currentPlace.getVicinity());
-
-        Picasso.get().load("http://i.imgur.com/DvpvklR.png").into(holder.placeImageView);
-
     }
 
     @Override
@@ -68,6 +77,7 @@ public class NearbyPlaceAdapter extends RecyclerView.Adapter<NearbyPlaceAdapter.
 
         public PlaceViewHolder(View itemView) {
             super(itemView);
+
 
             placeImageView = itemView.findViewById(R.id.placeImageView);
             placeNameTV = itemView.findViewById(R.id.placeNameTextView);
@@ -86,7 +96,7 @@ public class NearbyPlaceAdapter extends RecyclerView.Adapter<NearbyPlaceAdapter.
                     Bundle bundle = new Bundle();
                     bundle.putSerializable("result", clickedResult);
                     fragment.setArguments(bundle);
-                    ft.replace(R.id.placeLayout, fragment,"placeDetails");
+                    ft.replace(R.id.placeLayout, fragment);
                     ft.addToBackStack(null);
                     ft.commit();
                 }

@@ -26,6 +26,8 @@ import android.widget.FrameLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.GoogleMapOptions;
@@ -35,6 +37,9 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.maps.model.Polyline;
 import com.google.android.gms.maps.model.PolylineOptions;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.nullpointers.toutmate.Direction.DirectionResponse;
 import com.nullpointers.toutmate.Direction.DirectionService;
 import com.nullpointers.toutmate.Direction.Step;
@@ -61,7 +66,8 @@ import retrofit2.converter.gson.GsonConverterFactory;
  */
 public class NearByFragment extends Fragment implements OnMapReadyCallback {
 
-    private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/" ;
+    private static final String BASE_URL = "https://maps.googleapis.com/maps/api/place/nearbysearch/";
+    private static final int LOCATION_PERMISSION_REQUEST_CODE = 101;
     private GoogleMap map;
     private GoogleMapOptions options;
     private SupportMapFragment mapFragment;
@@ -72,8 +78,12 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
     private Spinner locationDistanceSp;
     private FrameLayout mapContainer;
 
+    private FusedLocationProviderClient fusedLocationProviderClient;
+
     private String searchItem = "locality";
     private int kilometre = 1500;
+    private double currentLatitude;
+    private double currentLongitude;
 
     private RecyclerView recyclerView;
     private RecyclerView.Adapter adapter;
@@ -121,7 +131,7 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
         super.onStart();
 
         options = new GoogleMapOptions();
-        options.zoomControlsEnabled(true);
+        options.compassEnabled(true);
 
         SupportMapFragment mapFragment = SupportMapFragment.newInstance(options);
 
@@ -141,6 +151,21 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
         findButton = view.findViewById(R.id.findLocationButton);
         mapContainer = view.findViewById(R.id.mapContainer);
 
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(getContext());
+
+        if (checkLocationPermission()) {
+            fusedLocationProviderClient.getLastLocation()
+                    .addOnSuccessListener(new OnSuccessListener<android.location.Location>() {
+                        @Override
+                        public void onSuccess(android.location.Location location) {
+                            if (location != null) {
+                                currentLatitude = location.getLatitude();
+                                currentLongitude = location.getLongitude();
+                            }
+                        }
+                    });
+        }
+
         ArrayAdapter<String> categoryArrayAdapter = new ArrayAdapter<String>
                 (getActivity(), android.R.layout.simple_spinner_dropdown_item,
                         locationCategories);
@@ -150,28 +175,6 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
 
         locationCategorySp.setAdapter(categoryArrayAdapter);
         locationDistanceSp.setAdapter(distanceArrayAdapter);
-
-//        locationCategorySp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            @Override
-//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                selectLocation(position);
-//            }
-//
-//            @Override
-//            public void onNothingSelected(AdapterView<?> parent) {}
-//        });
-
-//        locationDistanceSp.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-//            @Override
-//            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-//                selectKilometre(position);
-//            }
-//
-//            @Override
-//            public void onNothingSelected(AdapterView<?> parent) {
-//
-//            }
-//        });
 
         findButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -262,20 +265,26 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
     @Override
     public void onMapReady(GoogleMap googleMap) {
         map = googleMap;
-        if (ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(getActivity(),
-                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    501);
-        } else {
+        if (checkLocationPermission()) {
+            map.clear();
             map.setMyLocationEnabled(true);
-            LatLng latLng = new LatLng(MainActivity.latitude, MainActivity.longitude);
+            LatLng latLng = new LatLng(currentLatitude, currentLongitude);
             map.addMarker(new MarkerOptions().position(latLng));
             map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, 16));
-//            Log.d("Lat: ", MainActivity.latitude + "");
-//            Log.d("Lon: ", MainActivity.longitude + "");
-
-            // getDirections();
         }
+    }
+
+    private boolean checkLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                && ActivityCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            String[] permissions = {
+                    Manifest.permission.ACCESS_FINE_LOCATION,
+                    Manifest.permission.ACCESS_COARSE_LOCATION
+            };
+            ActivityCompat.requestPermissions(getActivity(), permissions, LOCATION_PERMISSION_REQUEST_CODE);
+            return false;
+        }
+        return true;
     }
 
     private void getNearbyPlaces() {
@@ -290,8 +299,8 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
         String apiKey = getString(R.string.place_api_key);
         String url = String.format(
                 "json?location=%f,%f&radius=%d&type=%s&key=%s",
-                MainActivity.latitude,
-                MainActivity.longitude,
+                currentLatitude,
+                currentLongitude,
                 kilometre,
                 searchItem,
                 apiKey);
@@ -312,38 +321,12 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
 
                     mapContainer.setVisibility(View.GONE);
                     recyclerView.setVisibility(View.VISIBLE);
-
-                    recyclerView.setOnClickListener(new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            int itemPosition = recyclerView.getChildLayoutPosition(v);
-//                            Result clickedResult = resultList.get(itemPosition);
-//
-//                            // Create fragment and give it an argument specifying the article it should show
-//                            PlaceDetailsFragment placeDetailsFragment = new PlaceDetailsFragment();
-//                            Bundle args = new Bundle();
-//                            args.putSerializable("result", clickedResult);
-//                            placeDetailsFragment.setArguments(args);
-//
-//                            FragmentTransaction transaction = getFragmentManager().beginTransaction();
-//
-//                            // Replace whatever is in the fragment_container view with this fragment,
-//                            // and add the transaction to the back stack so the user can navigate back
-//                            transaction.replace(R.layout.fragment_near_by, placeDetailsFragment);
-//                            transaction.addToBackStack(null);
-//
-//                            // Commit the transaction
-//                            transaction.commit();
-
-                            Toast.makeText(getContext(), itemPosition + "", Toast.LENGTH_SHORT).show();
-                        }
-                    });
                 }
             }
 
             @Override
             public void onFailure(Call<NearbyPlacesResponse> call, Throwable t) {
-                Toast.makeText(getContext(), "Failed to load nearby places", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), "Failed to load nearby places. Turn on your internet and GPS", Toast.LENGTH_SHORT).show();
                 Log.e("Nearby Place Error: ", t.getMessage());
             }
         });
@@ -406,5 +389,13 @@ public class NearByFragment extends Fragment implements OnMapReadyCallback {
 
             }
         });
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if (requestCode == LOCATION_PERMISSION_REQUEST_CODE
+                && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+
+        }
     }
 }
