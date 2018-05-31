@@ -37,11 +37,6 @@ import com.nullpointers.toutmate.fragment.NearByFragment;
 public class MainActivity extends AppCompatActivity
         implements NavigationView.OnNavigationItemSelectedListener {
 
-    private FusedLocationProviderClient client;
-
-    public static double latitude;
-    public static double longitude;
-
     private Toolbar toolbar;
     private DrawerLayout drawer;
     private NavigationView navigationView;
@@ -57,8 +52,6 @@ public class MainActivity extends AppCompatActivity
         navigationView = (NavigationView) findViewById(R.id.nav_view);
         firebaseAuth = FirebaseAuth.getInstance();
 
-        client = LocationServices.getFusedLocationProviderClient(this);
-
         setSupportActionBar(toolbar);
 
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
@@ -67,7 +60,9 @@ public class MainActivity extends AppCompatActivity
         toggle.syncState();
 
         navigationView.setNavigationItemSelectedListener(this);
-        displaySelectedScreen(R.id.action_home);
+        FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
+        ft.replace(R.id.mainLayout,new EventListFragment());
+        ft.commit();
     }
 
     @Override
@@ -77,6 +72,10 @@ public class MainActivity extends AppCompatActivity
             drawer.closeDrawer(GravityCompat.START);
         } else {
             super.onBackPressed();
+            /*Intent intent = new Intent(Intent.ACTION_MAIN);
+            intent.addCategory(Intent.CATEGORY_HOME);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);*/
         }
     }
 
@@ -86,15 +85,6 @@ public class MainActivity extends AppCompatActivity
         int id = item.getItemId();
         displaySelectedScreen(id);
         return true;
-    }
-
-    private void checkLocationPermission() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[] {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION},
-                    501);
-            return;
-        }
     }
 
     public void displaySelectedScreen(int selectedMenuId){
@@ -121,6 +111,7 @@ public class MainActivity extends AppCompatActivity
         if (fragment!=null){
             FragmentTransaction ft = getSupportFragmentManager().beginTransaction();
             ft.replace(R.id.mainLayout,fragment);
+            ft.addToBackStack(null);
             ft.commit();
         }
         drawer.closeDrawers();
@@ -131,6 +122,7 @@ public class MainActivity extends AppCompatActivity
         startActivity(new Intent(MainActivity.this,LoginActivity.class));
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode,resultCode,data);
@@ -139,4 +131,6 @@ public class MainActivity extends AppCompatActivity
             fragment.onActivityResult(requestCode,resultCode,data);
         }
     }
+
+
 }
